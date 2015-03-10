@@ -7,7 +7,7 @@ ssize_t read_(int fd, void *buf, size_t count) {
 		if (actuallyReadBytes == -1) {
 			return -1;
 		}
-        if (actuallyReadBytes == 0) {
+		if (actuallyReadBytes == 0) {
 			break;
 		}
 		count -= actuallyReadBytes;
@@ -32,7 +32,7 @@ ssize_t write_(int fd, void *buf, size_t count) {
 ssize_t read_until(int fd, void *buf, size_t count, char delimeter) {
 	ssize_t readBytes = 0;
 	int delimeterFound = 0;
-    char *bufChar = (char*)buf;
+	char *bufChar = (char*)buf;
 	while (count != 0) {
 		ssize_t actuallyReadBytes = read(fd, buf + readBytes, count);
 		if (actuallyReadBytes == -1) {
