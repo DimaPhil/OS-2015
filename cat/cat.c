@@ -11,7 +11,7 @@ int main() {
 			break;
 		}
 		if (readBytes == -1) {
-			fprintf(stderr, "An error occured while reading from stdin");
+			perror("An error occured while reading from stdin");
 		}
 		write_(STDOUT_FILENO, buffer, readBytes);
 	}	
