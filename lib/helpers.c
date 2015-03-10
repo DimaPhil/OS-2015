@@ -16,7 +16,7 @@ ssize_t read_(int fd, void *buf, size_t count) {
 	return readBytes;
 }
 
-ssize_t write_(int fd, void *buf, size_t count) {
+ssize_t write_(int fd, const void *buf, size_t count) {
 	ssize_t writtenBytes = 0;
 	while (count != 0) {
 		ssize_t actuallyWrittenBytes = write(fd, buf + writtenBytes, count);
