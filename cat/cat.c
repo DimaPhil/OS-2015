@@ -12,7 +12,11 @@ int main() {
 		}
 		if (readBytes == -1) {
 			perror("An error occured while reading from stdin");
+			break;
 		}
-		write_(STDOUT_FILENO, buffer, readBytes);
+		if (write_(STDOUT_FILENO, buffer, readBytes) == -1) {
+			perror("An error occured while writing to stdout");
+			break;
+		}
 	}	
 }
