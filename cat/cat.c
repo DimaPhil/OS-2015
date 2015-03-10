@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "helpers.h"
 
 const int MAX_BUFFER_SIZE = 1000;
@@ -9,6 +10,9 @@ int main() {
 		if (readBytes == 0) {
             break;
         }
+		if (readBytes == -1) {
+			fprintf(stderr, "An error occured while reading");
+		}
         write_(STDOUT_FILENO, buffer, readBytes);
     }
 }
