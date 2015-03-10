@@ -1,7 +1,6 @@
-#include <stdio.h>
 #include "helpers.h"
 
-const int MAX_BUFFER_SIZE = 1e5;
+const int MAX_BUFFER_SIZE = 1000;
 
 int main() {
     char buffer[MAX_BUFFER_SIZE];
