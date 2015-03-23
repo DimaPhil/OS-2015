@@ -57,3 +57,17 @@ ssize_t read_until(int fd, void *buf, size_t count, char delimeter) {
 	}
 	return readBytes;
 }
+
+int spawn(const char *file, char *const argv[]) {
+	pid_t pid = fork();
+	if (pid == -1) {
+		return -1;
+	} else if (pid > 0) {
+		int status;
+		waitpid(pid, &status, 0);
+		return status;
+	} else {
+		return execvp(file, argv);
+	}
+}
+
