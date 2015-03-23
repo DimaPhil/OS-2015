@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 ssize_t read_(int fd, void *buf, size_t count);
 ssize_t write_(int fd, const void *buf, size_t count);
