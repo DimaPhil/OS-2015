@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
 		if (readBytes == 0) {
 			break;
 		}
+
+		//parse words by \n and process them
 		endPointer += readBytes;
 		char *pointer;
 		char *prevPointer = buffer;
@@ -54,6 +56,7 @@ int main(int argc, char *argv[]) {
 		readSymbolsCount = endPointer - prevPointer;
 		endPointer = buffer + readSymbolsCount;
 	}
+	//left part of buffer
 	processCommand(command, argc, argv, buffer, endPointer);
 	return 0;
 }
