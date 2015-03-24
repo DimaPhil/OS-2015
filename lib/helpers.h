@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/wait.h>
 
 ssize_t read_(int fd, void *buf, size_t count);

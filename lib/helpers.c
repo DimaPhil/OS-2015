@@ -59,15 +59,15 @@ ssize_t read_until(int fd, void *buf, size_t count, char delimeter) {
 }
 
 int spawn(const char *file, char *const argv[]) {
-	pid_t pid = fork();
-	if (pid == -1) {
+	pid_t child = fork();
+	if (child == -1) {
 		return -1;
-	} else if (pid > 0) {
+	} else if (child > 0) {
 		int status;
-		waitpid(pid, &status, 0);
+		waitpid(child, &status, 0);
 		return status;
 	} else {
-		return execvp(file, argv);
+		exit(execvp(file, argv));
 	}
 }
 
