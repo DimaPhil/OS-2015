@@ -1,2 +1,1 @@
-OS-2015 course
-Author: Dmitry Philippov
+OS-2015 course, author: Dmitry Philippov
