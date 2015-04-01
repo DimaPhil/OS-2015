@@ -13,5 +13,6 @@ int main() {
 		buf_flush(STDOUT_FILENO, buffer, buf_size(buffer));
 	}
 	buf_flush(STDOUT_FILENO, buffer, buf_size(buffer));
+	buf_free(buffer);
 	return 0;
 }
