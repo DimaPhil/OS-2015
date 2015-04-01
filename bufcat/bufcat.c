@@ -10,7 +10,8 @@ int main() {
 		if (readBytes == -1 || readBytes == 0) {
 			break;
 		}
-		buf_flush(STDOUT_FILENO, buffer, MAX_BUFFER_SIZE);
+		buf_flush(STDOUT_FILENO, buffer, buf_size(buffer));
 	}
-	buf_flush(STDOUT_FILENO, buffer, MAX_BUFFER_SIZE);
+	buf_flush(STDOUT_FILENO, buffer, buf_size(buffer));
+	return 0;
 }
