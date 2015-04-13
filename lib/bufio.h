@@ -16,3 +16,5 @@ size_t buf_capacity(struct buf_t*);
 size_t buf_size(struct buf_t*);
 ssize_t buf_fill(int fd, struct buf_t *entry, size_t required);
 ssize_t buf_flush(int fd, struct buf_t *entry, size_t required);
+ssize_t buf_getline(int fd, struct buf_t *entry, char *dest);
+ssize_t bif_write(int fd, struct buf_t *entry, char *src, size_t srcLen);
