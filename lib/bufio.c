@@ -124,7 +124,7 @@ ssize_t buf_getline(int fd, struct buf_t *entry, char *dest) {
                 readBytes++;
         }
         while (1) {
-            ssize_t addedBytes = buf_fill(fd, entry, buf_capacity(entry));
+            ssize_t addedBytes = buf_fill(fd, entry, 1);
             if (addedBytes == -1) {
                 return -1;
             }
@@ -162,7 +162,7 @@ ssize_t buf_write(int fd, struct buf_t *entry, char *src, size_t srcLen) {
             entry->buffer[entry->size++] = src[pointer++];
         }
         if (entry->size == entry->capacity) {
-            int res = buf_flush(fd, entry, buf_size(entry));
+            ssize_t res = buf_flush(fd, entry, 1);
             if (res < 0) {
                 return -1;
             }
