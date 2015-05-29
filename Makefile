@@ -1,4 +1,4 @@
-DIRECTORIES = lib cat revwords filter bufcat
+DIRECTORIES = lib cat revwords filter bufcat simplesh
 
 all: $(DIRECTORIES)
 
@@ -13,4 +13,4 @@ clean:
 	$(MAKE) -C $(CURDIR)/revwords clean
 	$(MAKE) -C $(CURDIR)/filter clean
 	$(MAKE) -C $(CURDIR)/bufcat clean
-
+	$(MAKE) -C $(CURDIR)/simplesh clean

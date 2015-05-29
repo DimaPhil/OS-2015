@@ -91,3 +91,40 @@ ssize_t buf_flush(int fd, struct buf_t *entry, size_t required) {
 	}
 	return isAllWritten ? writtenBytes : -1;
 }
+
+ssize_t findDelimeter(char *buffer, size_t len, char delimeter) {
+    size_t i;
+    for (i = 0; i < len; i++) {
+        if (buffer[i] == '\0') {
+            break; 
+	}
+        if (buffer[i] == delimeter) {
+            return i;
+	}
+    }
+    return -1;
+}
+
+ssize_t buf_read_until(int fd, struct buf_t *entry, char delimeter) {
+    int result;
+    ssize_t position;
+    while (1) {
+	position = findDelimeter(entry->buffer, entry->size, delimeter);
+	if (position != -1) {
+	    break;
+	}
+        result = read(fd, entry->buffer + entry->size, entry->capacity - entry->size);
+        if (result == 0) {
+            break;
+	}
+        if (result > 0) {
+            entry->size += result;
+        } else { 
+            return -2; 
+        }
+    }
+    if (result == 0) {
+        return -3;
+    }
+    return position;
+}

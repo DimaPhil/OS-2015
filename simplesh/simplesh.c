@@ -8,12 +8,12 @@ int spaceOrDelimeter(char c, char delimeter) {
     return c == delimeter || c == '\0' || c == ' ' || c == '\t';
 }
 
-int countSymbol(char *buffer, char delimeter) {
+int countLexems(char *buffer, char delimeter) {
     if (buffer[0] == '\0') {
         return 0;
     }
     int count = 0;
-    int i = 1;
+    size_t i = 1;
     while (1) {
         if (!spaceOrDelimeter(buffer[i - 1], delimeter) && spaceOrDelimeter(buffer[i], delimeter)) {
             count++;
@@ -25,16 +25,16 @@ int countSymbol(char *buffer, char delimeter) {
     }
 }
 
-char* getLexem(char *buffer, char *delimeter, int *newPosition) {
-    int i = 0;
+char* getLexem(char *buffer, char *delimeter, size_t *newPosition) {
+    size_t i = 0;
     while (buffer[i] == ' ' || buffer[i] == '\t') {
         i++;
     }
-    int start = i;
+    size_t start = i;
     while (buffer[i] != ' ' && buffer[i] != '\t' && buffer[i] != '\0' && buffer[i] != *delimeter) {
         i++;
     }
-    int end = i;
+    size_t end = i;
     *delimeter = buffer[i];
     *newPosition = end;
     if (start == end) {
@@ -43,8 +43,8 @@ char* getLexem(char *buffer, char *delimeter, int *newPosition) {
     return strndup(buffer + start, end - start); 
 }
 
-int getDelimeter(char *buffer, char delimeter) {
-    int i = 0; 
+size_t getDelimeter(char *buffer, char delimeter) {
+    size_t i = 0; 
     while (buffer[i] == ' ' || buffer[i] == '\t') {
         i++;
     }
@@ -71,7 +71,7 @@ int main() {
         if (write_(STDOUT_FILENO, "$ ", 2) == -1) {
             return 1;
         }
-        int position = buf_read_until(STDIN_FILENO, entry, '\n');
+        ssize_t position = buf_read_until(STDIN_FILENO, entry, '\n');
         if (position == -2) {
             if (write_(STDOUT_FILENO, "\n$ ", 3) == -1) {
                 return 1;
@@ -84,15 +84,15 @@ int main() {
         char *buffer = entry->buffer;        
         buffer[position] = '\0';
         struct execargs_t *arguments[MAX_ARGUMENTS];
-        int argumentIndex = 0;
+        size_t argumentIndex = 0;
         while (1) {
             char delimeter = '|';
-            int argc = countSymbol(buffer, delimeter);
+            int argc = countLexems(buffer, delimeter);
             if (argc == 0) {
                 break;
             }
             char *argv[argc]; 
-            int shift;
+            size_t shift;
             int i;
             for (i = 0; i < argc; i++) {
                 delimeter = '|';
