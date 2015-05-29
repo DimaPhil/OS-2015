@@ -1,3 +1,6 @@
+#ifndef _BUFIO_H_
+#define _BUFIO_H_
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,3 +20,5 @@ size_t buf_size(struct buf_t*);
 ssize_t buf_fill(int fd, struct buf_t *entry, size_t required);
 ssize_t buf_flush(int fd, struct buf_t *entry, size_t required);
 ssize_t buf_read_until(int fd, struct buf_t *entry, char delimeter);
+
+#endif
