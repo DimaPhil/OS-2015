@@ -71,28 +71,30 @@ int spawn(const char *file, char *const argv[]) {
 	}
 }
 
+size_t childrenCount;
+int *children;
+
 struct execargs_t getExecargs(int argc, char **argv)
 {
     struct execargs_t result;
     result.argv = (char**)malloc((argc + 1) * sizeof(char*));
     int i;
     for (i = 0; i < argc; i++) {
-        result.argv[i] = strdup(argv[i]); 
+        size_t length = strlen(argv[i]);
+        result.argv[i] = (char*)malloc(length * sizeof(char));
+        size_t j;
+        for (j = 0; j < length; ++j) {
+            result.argv[i][j] = argv[i][j];
+        }
     }
-    result.argv[argc] = NULL;
+    result.argv[argc] = 0;
     return result;
 }
 
 int exec(struct execargs_t *args) {
-    if (spawn(args->argv[0], args->argv) < 0) {
-        return -1;
-    }
-    return 0;
+    return spawn(args->argv[0], args->argv) < 0 ? -1 : 0;
 }
  
-size_t childrenCount;
-int *children;
-
 void killChildren() {
     size_t i;
     for (i = 0; i < childrenCount; i++) {
@@ -105,8 +107,8 @@ int runpiped(struct execargs_t **programs, size_t n) {
     if (n == 0) {
         return 0;
     }
-    int pipefd[n - 1][2];
-    int child[n];	       
+    int pipefd[n][2];
+    int pids[n];	       
     size_t i;
     for (i = 0; i + 1 < n; i++) {
         if (pipe2(pipefd[i], O_CLOEXEC) < 0) {
@@ -114,8 +116,11 @@ int runpiped(struct execargs_t **programs, size_t n) {
         }
     }
     for (i = 0; i < n; i++) {
-        child[i] = fork();
-	if (child[i] == 0) {
+        pids[i] = fork();
+        if (pids[i] == -1) {
+            return -1;
+        }
+	if (pids[i] == 0) {
             if (i != 0) {
 		dup2(pipefd[i - 1][0], STDIN_FILENO);
             }
@@ -124,9 +129,6 @@ int runpiped(struct execargs_t **programs, size_t n) {
             }
 	    _exit(execvp(programs[i]->argv[0], programs[i]->argv));	
 	}
-        if (child[i] == -1) {
-            return -1;
-        }
     }
     for (i = 0; i + 1 < n; i++) {
 	close(pipefd[i][0]);
@@ -134,12 +136,12 @@ int runpiped(struct execargs_t **programs, size_t n) {
     }
     
     childrenCount = n;
-    children = (int*)child;
+    children = (int*)pids;
     struct sigaction act;
     memset(&act, '\0', sizeof act);
     act.sa_handler = &killChildren;
    
-    if (sigaction(SIGINT, &act, NULL) < 0)  {
+    if (sigaction(SIGINT, &act, 0) < 0)  {
         return -1;
     }
 
