@@ -4,48 +4,60 @@
 #define MAX_BUF_SIZE 4096
 #define MAX_ARGUMENTS 2048
 
-int spaceOrDelimeter(char c, char delimeter) {
-    return c == delimeter || c == '\0' || c == ' ' || c == '\t';
+int isWhiteSpace(char c) {
+    return c == ' ';
 }
 
-int countLexems(char *buffer, char delimeter) {
+int isDelimeter(char c, char delimeter) {
+    return c == '\0' || c == delimeter;
+}
+
+int isSpaceOrDelimeter(char c, char delimeter) {
+    return isDelimeter(c, delimeter) || isWhiteSpace(c);
+}
+
+int countCommands(char *buffer, char delimeter) {
     if (buffer[0] == '\0') {
         return 0;
     }
-    int count = 0;
-    size_t i = 1;
-    while (1) {
-        if (!spaceOrDelimeter(buffer[i - 1], delimeter) && spaceOrDelimeter(buffer[i], delimeter)) {
-            count++;
+    int words = 0;
+    size_t i;
+    for (i = 1;; i++) {
+        if (!isSpaceOrDelimeter(buffer[i - 1], delimeter) && isSpaceOrDelimeter(buffer[i], delimeter)) {
+            words++;
         }
-        if (buffer[i] == '\0' || buffer[i] == delimeter) {
-            return count;
+        if (isDelimeter(buffer[i], delimeter)) {
+            return words;
         }
-        i++;
     }
 }
 
-char* getLexem(char *buffer, char *delimeter, size_t *newPosition) {
+char* nextCommand(char *buffer, char *delimeter, size_t *newPos) {
     size_t i = 0;
-    while (buffer[i] == ' ' || buffer[i] == '\t') {
+    while (isWhiteSpace(buffer[i])) {
         i++;
     }
-    size_t start = i;
-    while (buffer[i] != ' ' && buffer[i] != '\t' && buffer[i] != '\0' && buffer[i] != *delimeter) {
+    size_t startPos = i;
+    while (!isWhiteSpace(buffer[i]) && buffer[i] != '\0' && buffer[i] != *delimeter) {
         i++;
     }
-    size_t end = i;
+    size_t endPos = i;
     *delimeter = buffer[i];
-    *newPosition = end;
-    if (start == end) {
+    *newPos = endPos;
+    if (startPos == endPos) {
         return 0;
     }
-    return strndup(buffer + start, end - start); 
+
+    char *result = (char*)malloc((endPos - startPos + 1) * sizeof(char));
+    for (i = 0; i < endPos - startPos; i++) {
+        result[i] = buffer[startPos + i];
+    }
+    return result;
 }
 
-size_t getDelimeter(char *buffer, char delimeter) {
+size_t nextDelimeterPos(char *buffer, char delimeter) {
     size_t i = 0; 
-    while (buffer[i] == ' ' || buffer[i] == '\t') {
+    while (isWhiteSpace(buffer[i])) {
         i++;
     }
     if (buffer[i] == delimeter) {
@@ -54,13 +66,13 @@ size_t getDelimeter(char *buffer, char delimeter) {
     return i;
 }
 
-void sigint_handler(int signal) {
+void sigintHandler(int signal) {
 }
 
 int main() {
     struct sigaction action;
     memset(&action, '\0', sizeof action);
-    action.sa_handler = &sigint_handler;
+    action.sa_handler = &sigintHandler;
    
     if (sigaction(SIGINT, &action, NULL) < 0) {
         return 1;
@@ -87,22 +99,22 @@ int main() {
         size_t argumentIndex = 0;
         while (1) {
             char delimeter = '|';
-            int argc = countLexems(buffer, delimeter);
-            if (argc == 0) {
+            int commands = countCommands(buffer, delimeter);
+            if (commands == 0) {
                 break;
             }
-            char *argv[argc]; 
-            size_t shift;
+            char *argv[commands]; 
+            size_t newPos = 0;
             int i;
-            for (i = 0; i < argc; i++) {
+            for (i = 0; i < commands; i++) {
+                argv[i] = nextCommand(buffer, &delimeter, &newPos);
                 delimeter = '|';
-                argv[i] = getLexem(buffer, &delimeter, &shift);
-                buffer += shift;
+                buffer += newPos;
             }
             arguments[argumentIndex] = (struct execargs_t*) malloc(sizeof(struct execargs_t));
-            *arguments[argumentIndex] = getExecargs(argc, argv);  
-            shift = getDelimeter(buffer, '|'); 
-            buffer += shift;
+            *arguments[argumentIndex] = getExecargs(commands, argv);  
+            newPos = nextDelimeterPos(buffer, '|'); 
+            buffer += newPos;
             argumentIndex++;
         }
         entry->size -= (buffer - entry->buffer + 1);
