@@ -49,7 +49,8 @@ ssize_t buf_fill(int fd, struct buf_t *entry, size_t required) {
 		abort();
 	}
 	#endif
-	while (required != 0) {
+	//while (required != 0) {
+        do {
 		ssize_t actuallyReadBytes = read(fd, entry->buffer + entry->size, required);
 		if (actuallyReadBytes == -1) {
 			return -1;
@@ -59,7 +60,7 @@ ssize_t buf_fill(int fd, struct buf_t *entry, size_t required) {
 		}
 		required -= actuallyReadBytes;
 		entry->size += actuallyReadBytes;
-	}
+	} while (required != 0);
 	return entry->size;
 }
 

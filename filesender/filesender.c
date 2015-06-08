@@ -9,17 +9,17 @@
 #define MAX_BUFFER_SIZE 65536
 
 int main(int argc, char **argv) {
-    struct addrinfo t;
+    struct addrinfo hints;
     struct addrinfo *info, *nowInfo;
     int _socket, result;
     
-    memset(&t, 0, sizeof(struct addrinfo));
-    t.ai_family = AF_INET;
-    t.ai_socktype = SOCK_STREAM;
-    t.ai_flags = AI_PASSIVE;  
-    t.ai_protocol = IPPROTO_TCP;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;  
+    hints.ai_protocol = IPPROTO_TCP;
     
-    result = getaddrinfo(0, argv[1], &t, &info);
+    result = getaddrinfo(0, argv[1], &hints, &info);
     if (result != 0) {
         return 1;
     }

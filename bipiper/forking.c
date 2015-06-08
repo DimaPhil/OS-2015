@@ -10,17 +10,17 @@
 #define MAX_BUFFER_SIZE 65536
 
 int getSocket(const char *port) {
-    struct addrinfo t;
+    struct addrinfo hints;
     struct addrinfo *info, *nowInfo;
     int _socket;
     
-    memset(&t, 0, sizeof(struct addrinfo));
-    t.ai_family = AF_INET;           
-    t.ai_socktype = SOCK_STREAM;
-    t.ai_flags = AI_PASSIVE; 
-    t.ai_protocol = IPPROTO_TCP;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;           
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE; 
+    hints.ai_protocol = IPPROTO_TCP;
    
-    int result = getaddrinfo(0, port, &t, &info);
+    int result = getaddrinfo(0, port, &hints, &info);
     if (result != 0) {
         return 1;
     }
@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     int socket1 = getSocket(argv[1]);
     int socket2 = getSocket(argv[2]);
   
-    struct buf_t * buf = buf_new(MAX_BUFFER_SIZE);
+    struct buf_t *buf = buf_new(MAX_BUFFER_SIZE);
     if (listen(socket1, -1) == -1 || listen(socket2, -1) == -1) {
         return 1;
     }
