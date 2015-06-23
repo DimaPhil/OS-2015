@@ -37,8 +37,12 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        if (bind(_socket, nowInfo->ai_addr, nowInfo->ai_addrlen) == 0) {
+        int result = bind(_socket, nowInfo->ai_addr, nowInfo->ai_addrlen);
+        if (result == 0) {
             break;
+        }
+        if (result == -1) {
+            return 1;
         }
 
         close(_socket);

@@ -12,6 +12,7 @@
 #include <errno.h>
 
 #define MAX_BUF_SIZE 65536
+//#define MAX_BUF_SIZE 10
 
 int getSocket(const char * port) {
     struct addrinfo hints;
@@ -41,9 +42,13 @@ int getSocket(const char * port) {
         if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) == -1) {
             return 1;
         }
-
-        if (bind(_socket, nowInfo->ai_addr, nowInfo->ai_addrlen) == 0) {
+    
+        int result = bind(_socket, nowInfo->ai_addr, nowInfo->ai_addrlen); 
+        if (result == 0) {
             break;
+        }
+        if (result == -1) {
+            return 1;
         }
 
         close(_socket);
@@ -93,17 +98,68 @@ int main(int argc, char **argv) {
    
     int state = 0;
     int fd1, fd2;
+    int ok[MAX_FD_COUNT];
+    size_t i;
+    for (i = 0; i < MAX_FD_COUNT; i++) {
+        ok[i] = 1;
+    }
 
     while (1) { 
         int res = poll(fds, 2 + 2 * cnt, -1);
-        if (res <= 0 && errno != EINTR) {
+        if (res < 0 && errno != EINTR) {
             return 1;
         }
 
         size_t i;
         for (i = 0; i < cnt; i++) {         
-            if ((fds[2 + 2 * i].revents & POLLRDHUP) ||
-                (fds[2 + 2 * i + 1].revents & POLLRDHUP)) {
+            if (fds[2 + 2 * i].revents & POLLIN) {
+                //fprintf(stderr, "POLLIN %d\n", 2 + 2 * (int)i);
+                buf_fill(fds[2 + 2 * i].fd, buffer1[i], 1);
+                fds[2 + 2 * i + 1].events |= POLLOUT;
+                if (buffer1[i]->size == buffer1[i]->capacity) {
+                    fds[2 + 2 * i].events &= ~POLLIN;
+                } else {
+                    fds[2 + 2 * i].events |= POLLIN;
+                }
+            }
+            if (fds[2 + 2 * i + 1].revents & POLLIN) {
+                buf_fill(fds[2 + 2 * i + 1].fd, buffer2[i], 1);
+                fds[2 + 2 * i].events |= POLLOUT;
+                if (buffer2[i]->size == buffer2[i]->capacity) {
+                    fds[2 + 2 * i + 1].events &= ~POLLIN;
+                } else {
+                    fds[2 + 2 * i + 1].events |= POLLIN;
+                }
+            }
+            if (fds[2 + 2 * i].revents & POLLOUT) {
+                ok[2 + 2 * i] = 1;
+                size_t flushed = buf_flush(fds[2 + 2 * i].fd, buffer2[i], 1);
+                if (flushed == 0) {
+                    ok[2 + 2 * i] = 0;
+                }
+                fds[2 + 2 * i + 1].events |= POLLIN;
+                if (buffer2[i]->size == 0) {
+                    fds[2 + 2 * i].events &= ~POLLOUT;
+                } else {
+                    fds[2 + 2 * i].events |= POLLOUT;
+                }
+            }
+            if (fds[2 + 2 * i + 1].revents & POLLOUT) {
+                ok[2 + 2 * i + 1] = 1;
+                size_t flushed = buf_flush(fds[2 + 2 * i + 1].fd, buffer1[i], 1);
+                if (flushed == 0) {
+                    ok[2 + 2 * i + 1] = 0;
+                }
+                fds[2 + 2 * i].events |= POLLIN;
+                if (buffer1[i]->size == 0) {
+                    fds[2 + 2 * i + 1].events &= ~POLLOUT;
+                } else {
+                    fds[2 + 2 * i + 1].events |= POLLOUT;
+                }
+            } 
+            if ((fds[2 + 2 * i].revents & POLLHUP) ||
+                (fds[2 + 2 * i + 1].revents & POLLHUP) || ok[2 + 2 * i] == 0 || ok[2 + 2 * i + 1] == 0) {
+                //fprintf(stderr, "Fuck :(");
                 close(fds[2 + 2 * i].fd);
                 close(fds[2 + 2 * i + 1].fd);
                 buf_free(buffer1[i]);
@@ -129,34 +185,6 @@ int main(int argc, char **argv) {
                 fds[1].events |= POLLIN;
                 break;
             }
-            if (fds[2 + 2 * i].revents & POLLIN) {
-                buf_fill(fds[2 + 2 * i].fd, buffer1[i], 1);
-                fds[2 + 2 * i + 1].events |= POLLOUT;
-                if (buffer1[i]->size == buffer1[i]->capacity) {
-                    fds[2 + 2 * i].events &= ~POLLIN;
-                }
-            }
-            if (fds[2 + 2 * i + 1].revents & POLLIN) {
-                buf_fill(fds[2 + 2 * i + 1].fd, buffer2[i], 1);
-                fds[2 + 2 * i].events |= POLLOUT;
-                if (buffer2[i]->size == buffer2[i]->capacity) {
-                    fds[2 + 2 * i + 1].events &= ~POLLIN;
-                }
-            }
-            if (fds[2 + 2 * i].revents & POLLOUT) {
-                buf_flush(fds[2 + 2 * i].fd, buffer2[i], 1);
-                fds[2 + 2 * i + 1].events |= POLLIN;
-                if (buffer2[i]->size == 0) {
-                    fds[2 + 2 * i].events &= ~POLLOUT;
-                }
-            }
-            if (fds[2 + 2 * i + 1].revents & POLLOUT) {
-                buf_flush(fds[2 + 2 * i + 1].fd, buffer1[i], 1);
-                fds[2 + 2 * i].events |= POLLIN;
-                if (buffer1[i]->size == 0) {
-                    fds[2 + 2 * i + 1].events &= ~POLLOUT;
-                }
-            }            
         }
 
         if (state == 0 && (fds[0].revents & POLLIN)) {        
@@ -173,17 +201,16 @@ int main(int argc, char **argv) {
             }
             state = 0;
             fds[2 + 2 * cnt].fd = fd1;
-            fds[2 + 2 * cnt].events = POLLIN | POLLRDHUP;
+            fds[2 + 2 * cnt].events = POLLIN | POLLHUP;
             fds[2 + 2 * cnt + 1].fd = fd2;
-            fds[2 + 2 * cnt + 1].events = POLLIN | POLLRDHUP;
+            fds[2 + 2 * cnt + 1].events = POLLIN | POLLHUP;
             buffer1[cnt] = buf_new(MAX_BUF_SIZE);
             buffer2[cnt] = buf_new(MAX_BUF_SIZE);
             if (++cnt >= 127) {
                 fds[0].events &= ~POLLIN;
                 fds[1].events &= ~POLLIN;
             }
-        }
-   
+        } 
     }
 
     close(socket1);

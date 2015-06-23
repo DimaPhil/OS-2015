@@ -71,11 +71,11 @@ ssize_t buf_flush(int fd, struct buf_t *entry, size_t required) {
 	}
 	#endif
 	size_t writtenBytes = 0;
-	int isAllWritten = 1;
+	//int isAllWritten = 1;
 	while (required != 0 && writtenBytes < entry->size) {
 		ssize_t actuallyWrittenBytes = write(fd, entry->buffer + writtenBytes, entry->size - writtenBytes);
 		if (actuallyWrittenBytes == -1) {
-			isAllWritten = 0;
+			//isAllWritten = 0;
 			break;
 		}
 		if (required >= actuallyWrittenBytes) {
@@ -90,7 +90,7 @@ ssize_t buf_flush(int fd, struct buf_t *entry, size_t required) {
 	for (pointer = 0; pointer != entry->size; ++pointer) {
 		entry->buffer[pointer] = entry->buffer[pointer + writtenBytes];
 	}
-	return isAllWritten ? writtenBytes : -1;
+	return writtenBytes;//isAllWritten ? writtenBytes : -1;
 }
 
 ssize_t findDelimeter(char *buffer, size_t len, char delimeter) {
